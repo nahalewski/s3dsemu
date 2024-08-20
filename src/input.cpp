@@ -1,27 +1,26 @@
 #include "input.h"
-#include <switch/runtime/devices/console.h>  // For gfxInitDefault and gfxExit
+#include <switch/runtime/devices/console.h>  // Ensure this is the correct header for console-specific functions
 
-ButtonMapping mappings[12];  // Now 12 buttons
+ButtonMapping mappings[12] = {
+    {HidNpadButton_A, 0x0001},     // Switch A -> 3DS A
+    {HidNpadButton_B, 0x0002},     // Switch B -> 3DS B
+    {HidNpadButton_X, 0x0008},     // Switch X -> 3DS X
+    {HidNpadButton_Y, 0x0004},     // Switch Y -> 3DS Y
+    {HidNpadButton_L, 0x0040},     // Switch L -> 3DS L
+    {HidNpadButton_R, 0x0080},     // Switch R -> 3DS R
+    {HidNpadButton_ZL, 0x0800},    // Switch ZL -> 3DS ZL
+    {HidNpadButton_ZR, 0x1000},    // Switch ZR -> 3DS ZR
+    {HidNpadButton_Plus, 0x0200},  // Switch Start -> 3DS Start
+    {HidNpadButton_Minus, 0x0100}, // Switch Select -> 3DS Select
+    {HiddbgNpadButton_Home, 0x0400},  // Switch Home -> 3DS Home
+    {HidNpadButton_StickL, 0x2000} // Switch Left Joystick Button -> 3DS Left Joystick Click
+};
 
-void initializeDefaultMappings() {
-    mappings[0] = {KEY_A, 0x0001};     // Switch A -> 3DS A
-    mappings[1] = {KEY_B, 0x0002};     // Switch B -> 3DS B
-    mappings[2] = {KEY_X, 0x0008};     // Switch X -> 3DS X
-    mappings[3] = {KEY_Y, 0x0004};     // Switch Y -> 3DS Y
-    mappings[4] = {KEY_L, 0x0040};     // Switch L -> 3DS L
-    mappings[5] = {KEY_R, 0x0080};     // Switch R -> 3DS R
-    mappings[6] = {KEY_ZL, 0x0800};    // Switch ZL -> 3DS ZL
-    mappings[7] = {KEY_ZR, 0x1000};    // Switch ZR -> 3DS ZR
-    mappings[8] = {KEY_PLUS, 0x0200};  // Switch Start -> 3DS Start
-    mappings[9] = {KEY_MINUS, 0x0100}; // Switch Select -> 3DS Select
-    mappings[10] = {KEY_HOME, 0x0400}; // Switch Home -> 3DS Home
-    mappings[11] = {KEY_LSTICK, 0x2000}; // Switch Left Joystick Button -> 3DS Left Joystick Click
-}
-
-void handleInput() {
-    hidScanInput();
-    u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
-    u64 kHeld = hidKeysHeld(CONTROLLER_P1_AUTO);
+void handleInput(PadState* pad) {
+    padUpdate(pad);
+    u64 kDown = padGetButtonsDown(pad);
+    u64 kHeld = padGetButtons(pad);  
+    (void)kHeld;  // Suppress warning for unused variable
 
     for (int i = 0; i < 12; ++i) {
         if (kDown & mappings[i].switch_button) {
@@ -29,28 +28,31 @@ void handleInput() {
         }
     }
 
-    JoystickPosition leftStick, rightStick;
-    hidJoystickRead(&leftStick, CONTROLLER_P1_AUTO, JOYSTICK_LEFT);
-    hidJoystickRead(&rightStick, CONTROLLER_P1_AUTO, JOYSTICK_RIGHT);
+    HidAnalogStickState leftStick = padGetStickPos(pad, 0);
+    HidAnalogStickState rightStick = padGetStickPos(pad, 1);
 
     processJoystickInput(leftStick, rightStick);
 }
 
-void processJoystickInput(JoystickPosition leftStick, JoystickPosition rightStick) {
-    // Translate joystick positions into 3DS analog input values
-    int left_x = leftStick.dx;
-    int left_y = leftStick.dy;
-    int right_x = rightStick.dx;
-    int right_y = rightStick.dy;
+void processJoystickInput(HidAnalogStickState leftStick, HidAnalogStickState rightStick) {
+    int left_x = leftStick.x;
+    int left_y = leftStick.y;
+    int right_x = rightStick.x;
+    int right_y = rightStick.y;
 
-    // Apply this input to your emulator logic
+    // Suppress warnings for unused variables
+    (void)left_x;
+    (void)left_y;
+    (void)right_x;
+    (void)right_y;
+
+    // Apply this input to your emulator logic (add your logic here if needed)
 }
 
 void sendButtonPressToEmulator(uint32_t n3ds_button) {
-    // Here you would set the corresponding bit in your emulator's input state
     set3DSButtonState(n3ds_button, true);
 }
 
 void set3DSButtonState(uint32_t button, bool pressed) {
-    // Integrate this with your emulator's input handling system
+    // Implement your emulator's input handling logic here
 }

@@ -1,54 +1,50 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.28)
 project(Switch3DSEmulator)
 
-# Include the Switch toolchain file from the correct path
-include(${DEVKITPRO}/cmake/Switch.cmake)
+# Include the Switch toolchain file
+include(C:/devkitPro/cmake/Switch.cmake)
 
 # Set the architecture and system name
-set(CMAKE_SYSTEM_NAME NintendoSwitch)
+set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_PROCESSOR aarch64)
 
 # Set the compilers
-find_program(CMAKE_C_COMPILER aarch64-none-elf-gcc HINTS ${DEVKITPRO}/devkitA64/bin)
-find_program(CMAKE_CXX_COMPILER aarch64-none-elf-g++ HINTS ${DEVKITPRO}/devkitA64/bin)
+set(CMAKE_C_COMPILER "C:/devkitPro/devkitA64/bin/aarch64-none-elf-gcc.exe")
+set(CMAKE_CXX_COMPILER "C:/devkitPro/devkitA64/bin/aarch64-none-elf-g++.exe")
 
-# Set the linker and other settings
-set(CMAKE_ASM_COMPILER ${CMAKE_C_COMPILER})
-set(CMAKE_EXE_LINKER_FLAGS "-specs=${DEVKITPRO}/libnx/switch.specs -fPIE")
-set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
-set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
-set(CMAKE_SHARED_LIBRARY_LINK_FLAGS "")
+# Include directories
+include_directories(
+    C:/devkitPro/portlibs/switch/include
+    include
+)
 
-# Set the standard libraries to link against
-set(CMAKE_C_STANDARD_LIBRARIES "-lnx -lm")
-set(CMAKE_CXX_STANDARD_LIBRARIES "-lnx -lm")
+# Link directories
+link_directories(
+    C:/devkitPro/portlibs/switch/lib
+    C:/devkitPro/libnx/lib
+)
 
-# Define paths for includes and libraries
-include_directories(${DEVKITPRO}/libnx/include)
-include_directories(/opt/devkitpro/portlibs/switch/include/SDL2)
-link_directories(${DEVKITPRO}/libnx/lib)
-link_directories(/opt/devkitpro/portlibs/switch/lib)
+# Set compiler flags
+set(CMAKE_C_FLAGS "-g -Wall -O2 -ffunction-sections -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -D__SWITCH__")
+set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fno-rtti -fno-exceptions")
+set(CMAKE_ASM_FLAGS "-g -march=armv8-a+crc+crypto")
+set(CMAKE_EXE_LINKER_FLAGS "-specs=C:/devkitPro/libnx/switch.specs -g -march=armv8-a+crc+crypto -Wl,-Map,${PROJECT_NAME}.map")
 
-# Add executable and source files
-add_executable(Switch3DSEmulator
+# Set source files
+set(SOURCES
     src/main.cpp
-    src/cpu/arm11.cpp
-    src/cpu/arm9.cpp
-    src/input.cpp
-    src/memory.cpp
-    src/render.cpp
-    src/gpu/gpu.cpp
+    src/main.h
 )
 
-# Link against libnx and SDL2 libraries
-target_link_libraries(Switch3DSEmulator nx SDL2)
+# Create executable
+add_executable(${PROJECT_NAME} ${SOURCES})
 
-# Add custom command to create NRO file
-add_custom_command(TARGET Switch3DSEmulator POST_BUILD
-    COMMAND ${DEVKITPRO}/tools/bin/elf2nro
-    ARGS --output ${CMAKE_BINARY_DIR}/Switch3DSEmulator.nro ${CMAKE_BINARY_DIR}/Switch3DSEmulator
-    COMMENT "Generating NRO file"
+# Link libraries
+target_link_libraries(${PROJECT_NAME} GLESv2 EGL nx)
+
+# Generate the NRO file
+nx_create_nro(${PROJECT_NAME}
+    NACP_NAME "Switch 3DS Emulator"
+    NACP_AUTHOR "Your Name"
+    ICON_PATH "${CMAKE_SOURCE_DIR}/icon.jpg"
 )
-
-# Ensure the custom command is executed after build
-add_custom_target(generate_nro ALL DEPENDS Switch3DSEmulator)

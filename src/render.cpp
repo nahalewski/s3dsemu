@@ -41,22 +41,19 @@ void renderMenu() {
     printf("\x1b[11;1H=============================");
 
     for (size_t i = 0; i < gameList.size() && i < 10; ++i) { // Display up to 10 games
-        printf("\x1b[%lu;1H%s %s", 12 + i, selectedOption == 4 + i ? ">" : " ", gameList[i].c_str());
+        printf("\x1b[%lu;1H%s %s", 12 + i, static_cast<size_t>(selectedOption) == 4 + i ? ">" : " ", gameList[i].c_str());
     }
 
     printf("\x1b[23;1HUse D-Pad to navigate, A to select");
 
-    gfxFlushBuffers();
-    gfxSwapBuffers();
-    gfxWaitForVsync();
+    // Update the console
+    consoleUpdate(NULL);
 }
 
 void renderGameList() {
-    if (selectedOption >= 4 && selectedOption < 4 + gameList.size()) {
+    if (static_cast<size_t>(selectedOption) >= 4 && static_cast<size_t>(selectedOption) < 4 + gameList.size()) {
         printf("\x1b[1;1HLoading %s...\n", gameList[selectedOption - 4].c_str());
-        gfxFlushBuffers();
-        gfxSwapBuffers();
-        gfxWaitForVsync();
+        consoleUpdate(NULL);
 
         // Here you would add code to load and run the selected game.
     }
